@@ -9,32 +9,6 @@ import PIL
 
 ############## ViT ##############
 
-"""
-# in their implementation, the multihead attention is simply one large matrix
-class attentionHead:
-    def __init__(self, dim, n, batch_size,num_heads):
-        self.dim = dim
-        self.n = n
-        self.batch_size = batch_size
-        self.num_heads = num_heads
-        self.Dh = int(self.dim / self.num_heads)
-
-        # larger input matrices that reflect the entire attention mechanism
-        self.q = torch.randn((self.batch_size, self.dim, 3 * self.Dh))
-        self.k = torch.randn((self.batch_size, self.dim, 3 * self.Dh))
-        self.v = torch.randn((self.batch_size, self.dim, 3 * self.Dh))
-
-
-    def attentionMech(self, input):
-        # part one of the attention mechanism
-        q_mat = torch.matmul(input, self.q)
-        k_mat = torch.matmul(input, self.k)
-        v_mat = torch.matmul(input, self.v)
-        # softmax step of the attention mechanism
-        inter = torch.softmax((torch.matmul(q_mat, torch.transpose(k_mat, 1, 2)) / math.sqrt(self.Dh)), 2)
-        return torch.matmul(inter, v_mat)
-"""
-
 class multiHeadAttention(nn.Module):
     def __init__(self, num_heads, dim, n, batch_size):
         super(multiHeadAttention, self).__init__()
@@ -61,11 +35,6 @@ class multiHeadAttention(nn.Module):
         inter = torch.softmax((torch.matmul(q_mat, torch.transpose(k_mat, 1, 2)) / math.sqrt(self.Dh)), 2)
         return self.multi_mad(torch.matmul(inter, v_mat))
         
-
-#ok = torch.randn(1, 16, 32)
-#test = multiHeadAttention(8, 32, 16, 1)
-#print(test.attentionMech(ok).shape)
-
 class EncoderBlock(nn.Module):
     def __init__(self, num_heads, dim, batch_size, n):
         super(EncoderBlock, self).__init__()
@@ -87,7 +56,6 @@ class EncoderBlock(nn.Module):
         output = self.mlp(uhHuh)
         output += toAdd
         return output
-
 
 class vit(nn.Module):
 
