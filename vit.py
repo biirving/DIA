@@ -85,8 +85,7 @@ class vit(nn.Module):
         
         self.encoderBlocks = nn.ModuleList([EncoderBlock(num_heads = 8, dim = dim, batch_size = batch_size , n = self.n + 1) for i in range(8)])
 
-        #self.patch_token = nn.Parameter(torch.randn(1, 1, dim))
-
+        
         self.mlpHead = nn.Sequential(nn.LayerNorm(dim), nn.GELU(), nn.Linear(self.dim, num_classes))
         self.dropout = nn.Dropout(0.1)
 
