@@ -4,6 +4,7 @@ from pandas import array
 import torch
 from torch import BFloat16Storage, Tensor, bfloat16, nn
 from einops import rearrange, repeat
+from einops.layers.torch import Rearrange
 import math
 import PIL
 
@@ -18,8 +19,11 @@ class multiHeadAttention(nn.Module):
         self.batch_size = batch_size
         self.Dh = int(self.dim/self.num_heads)
 
+        self.softmax = nn.Softmax(dim = -1)
         # The matrix which multiplies all of the attention heads at the end
         self.multi_mad = nn.Linear(num_heads * self.Dh * 3, self.dim)
+
+
 
         # these weights will be initialized randomly
         # in terms of the weights, they will eventually attent to different parts of the inputs in a similar way
@@ -32,9 +36,11 @@ class multiHeadAttention(nn.Module):
         q_mat = self.q(input)
         v_mat = self.v(input)
         k_mat = self.k(input)
-        inter = torch.softmax((torch.matmul(q_mat, torch.transpose(k_mat, 1, 2)) / math.sqrt(self.Dh)), 2)
+        #inter = torch.softmax((torch.matmul(q_mat, torch.transpose(k_mat, 1, 2)) / math.sqrt(self.Dh)), 2)
+        inter = self.softmax((torch.matmul(q_mat, torch.transpose(k_mat, 1, 2)) / math.sqrt(self.Dh)))
         return self.multi_mad(torch.matmul(inter, v_mat))
         
+
 class EncoderBlock(nn.Module):
     def __init__(self, num_heads, dim, batch_size, n):
         super(EncoderBlock, self).__init__()
@@ -60,7 +66,7 @@ class EncoderBlock(nn.Module):
 class vit(nn.Module):
 
     def __init__(self, height, width, patch_res, dim, num_classes, batch_size):
-        super().__init__()
+        super(vit, self).__init__()
         self.height = height
         self.width = width
         self.channels = 3
@@ -97,12 +103,10 @@ class vit(nn.Module):
         for encoder in self.encoderBlocks:
             output = encoder.forward(input)
             input = output
-
         out = self.mlpHead(output[:, 0])
 
         return out
         
-
 
     # alternating sin/cos embeddings from the first paper 
     def applyPositionalEncodings(self, input:Tensor):
@@ -114,6 +118,3 @@ class vit(nn.Module):
             positional = torch.tensor([val] * self.dim)
             input[0][x] += positional
         return input
-
-
-
