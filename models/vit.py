@@ -24,7 +24,7 @@ class multiHeadAttention(nn.Module):
         self.multi_mad = nn.Linear(num_heads * self.Dh * 3, self.dim)
 
         # these weights will be initialized randomly
-        # in terms of the weights, they will eventually attent to different parts of the inputs in a similar way
+        # in terms of the weights, they will eventually attend to different parts of the inputs in a similar way
         self.q = nn.Linear(self.dim, 3 * self.Dh * num_heads)
         self.v = nn.Linear(self.dim, 3 * self.Dh * num_heads)
         self.k = nn.Linear(self.dim, 3 * self.Dh * num_heads)
