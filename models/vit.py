@@ -23,8 +23,6 @@ class multiHeadAttention(nn.Module):
         # The matrix which multiplies all of the attention heads at the end
         self.multi_mad = nn.Linear(num_heads * self.Dh * 3, self.dim)
 
-
-
         # these weights will be initialized randomly
         # in terms of the weights, they will eventually attent to different parts of the inputs in a similar way
         self.q = nn.Linear(self.dim, 3 * self.Dh * num_heads)
