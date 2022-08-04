@@ -28,7 +28,6 @@ class multiHeadAttention(nn.Module):
         self.v = nn.Linear(self.dim, 3 * self.Dh * self.num_heads)
         self.k = nn.Linear(self.dim, 3 * self.Dh * self.num_heads)
         
-    # the difference here is we use the repeat function, to create a stack of the inputs
     def forward(self, input):
         # q, k, v matrices
         q_mat = rearrange(self.q(input), 'b n (h d) -> b h n d', h = self.num_heads)
