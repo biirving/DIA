@@ -7,8 +7,7 @@ from einops import rearrange, repeat
 from einops.layers.torch import Rearrange
 import math
 import PIL
-
-############## ViT ##############
+import sys
 
 class multiHeadAttention(nn.Module):
     def __init__(self, num_heads, dim, n, batch_size):
@@ -21,23 +20,30 @@ class multiHeadAttention(nn.Module):
 
         self.softmax = nn.Softmax(dim = -1)
         # The matrix which multiplies all of the attention heads at the end
-        self.multi_mad = nn.Linear(num_heads * self.Dh * 3, self.dim)
+        self.multi_mad = nn.Linear(self.num_heads * 3 * self.Dh, self.dim)
 
         # these weights will be initialized randomly
         # in terms of the weights, they will eventually attend to different parts of the inputs in a similar way
-        self.q = nn.Linear(self.dim, 3 * self.Dh * num_heads)
-        self.v = nn.Linear(self.dim, 3 * self.Dh * num_heads)
-        self.k = nn.Linear(self.dim, 3 * self.Dh * num_heads)
+        self.q = nn.Linear(self.dim, 3 * self.Dh * self.num_heads)
+        self.v = nn.Linear(self.dim, 3 * self.Dh * self.num_heads)
+        self.k = nn.Linear(self.dim, 3 * self.Dh * self.num_heads)
         
     # the difference here is we use the repeat function, to create a stack of the inputs
-    def attentionMech(self, input):
-        q_mat = self.q(input)
-        v_mat = self.v(input)
-        k_mat = self.k(input)
-        #inter = torch.softmax((torch.matmul(q_mat, torch.transpose(k_mat, 1, 2)) / math.sqrt(self.Dh)), 2)
-        inter = self.softmax((torch.matmul(q_mat, torch.transpose(k_mat, 1, 2)) / math.sqrt(self.Dh)))
-        return self.multi_mad(torch.matmul(inter, v_mat))
-        
+    def forward(self, input):
+        # q, k, v matrices
+        q_mat = rearrange(self.q(input), 'b n (h d) -> b h n d', h = self.num_heads)
+        v_mat = rearrange(self.k(input), 'b n (h d) -> b h n d', h = self.num_heads)
+        k_mat = rearrange(self.v(input), 'b n (h d) -> b h n d', h = self.num_heads)
+
+        # Softmax step, calculated for each row of each head
+        inter = self.softmax(torch.matmul(q_mat, torch.transpose(k_mat, 2, 3)) / (math.sqrt(self.Dh) * self.num_heads))
+
+        # prepare the vector for input
+        final = rearrange(torch.matmul(inter, v_mat), 'b h n d -> b n (h d)', h = self.num_heads)
+
+        # final computation
+        return self.multi_mad(final)
+
 
 class EncoderBlock(nn.Module):
     def __init__(self, num_heads, dim, batch_size, n):
@@ -60,6 +66,7 @@ class EncoderBlock(nn.Module):
         output = self.mlp(uhHuh)
         output += toAdd
         return output
+
 
 class vit(nn.Module):
 
