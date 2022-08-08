@@ -7,15 +7,15 @@ from einops import rearrange, repeat
 from einops.layers.torch import Rearrange
 import math
 import PIL
-import sys
+import sys, os 
+
 
 class multiHeadAttention(nn.Module):
-    def __init__(self, num_heads, dim, n, batch_size):
+    def __init__(self, num_heads, dim, n):
         super(multiHeadAttention, self).__init__()
         self.num_heads = num_heads
         self.dim = dim
         self.n = n
-        self.batch_size = batch_size
         self.Dh = int(self.dim/self.num_heads)
 
         self.softmax = nn.Softmax(dim = -1)
@@ -45,21 +45,24 @@ class multiHeadAttention(nn.Module):
 
 
 class EncoderBlock(nn.Module):
-    def __init__(self, num_heads, dim, batch_size, n):
+    def __init__(self, num_heads, dim, n):
         super(EncoderBlock, self).__init__()
         # number of attention heads
         self.num_heads = num_heads
         # number of attention blocks
         self.dim = dim
         # layer normalization, to stabilize the gradients
-        self.norm = nn.LayerNorm(normalized_shape = (batch_size, n, dim))
-        self.attention = multiHeadAttention(self.num_heads, dim, n, batch_size)
+        # should not depend on batch size
+        self.norm = nn.LayerNorm(normalized_shape = (n, dim), elementwise_affine = True)
+        self.attention = multiHeadAttention(self.num_heads, dim, n)
         self.dh = int(self.dim / self.num_heads)
         self.mlp = nn.Linear(dim, dim)
 
+        
+
     def forward(self, input):
         whoa = self.norm(input)
-        uhOh = self.attention.attentionMech(whoa)
+        uhOh = self.attention.forward(whoa)
         uhHuh = self.norm(uhOh + input)
         toAdd = uhOh + input    
         output = self.mlp(uhHuh)
@@ -67,10 +70,14 @@ class EncoderBlock(nn.Module):
         return output
 
 
+
+
+# You should be able to feed an input of any batch size to the model
 class vit(nn.Module):
 
     def __init__(self, height, width, patch_res, dim, num_classes, batch_size):
         super(vit, self).__init__()
+        self.checkPass = True
         self.height = height
         self.width = width
         self.channels = 3
@@ -91,26 +98,36 @@ class vit(nn.Module):
         # this will be concated to the end of the input before positional embedding
         # should the class token be randomonly initialized? or the same across batches? See what happens during training
 
+        # the positional embedding should be applied based on what 
         self.pos_embed = nn.Parameter(torch.randn(batch_size, self.n + 1, dim))
         
-        self.encoderBlocks = nn.ModuleList([EncoderBlock(num_heads = 8, dim = dim, batch_size = batch_size , n = self.n + 1) for i in range(8)])
+        self.encoderBlocks = nn.ModuleList([EncoderBlock(num_heads = 8, dim = dim, n = self.n + 1) for i in range(8)])
 
         
         self.mlpHead = nn.Sequential(nn.LayerNorm(dim), nn.GELU(), nn.Linear(self.dim, num_classes))
         self.dropout = nn.Dropout(0.1)
 
+
+            
+
     def forward(self, img):
         input = self.patchEmbed(img)
         input = torch.cat((input, self.classtkn), dim = 1)
+        print(input)
         input += self.pos_embed
         input = self.dropout(input)
         for encoder in self.encoderBlocks:
             output = encoder.forward(input)
             input = output
         out = self.mlpHead(output[:, 0])
-
         return out
         
+    # input will always have batchsize included?
+    def adjustBatchSize(self, newBatch):
+        # We can just expand the class and position tokens according to the batch size
+        self.classtkn = torch.expand(self.classtkn, 1, self.dim)
+        self.posEmbed = torch.expand(self.pos_embed, self.n + 1, dim)
+
 
     # alternating sin/cos embeddings from the first paper 
     def applyPositionalEncodings(self, input:Tensor):
