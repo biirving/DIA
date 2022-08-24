@@ -44,22 +44,35 @@ class dividedSpaceTimeAttention(nn.Module):
     def forward(self, input):
 
             # q, k, v matrices
-            q_mat = rearrange(self.q(input), 'b nf (h d) -> b h nf d', h = self.num_heads)
-            v_mat = rearrange(self.k(input), 'b nf (h d) -> b h nf d', h = self.num_heads)
-            k_mat = rearrange(self.v(input), 'b nf (h d) -> b h nf d', h = self.num_heads)
+            q_mat = rearrange(self.q(input[:, 1:, :]), 'b nf (h d) -> b h nf d', h = self.num_heads)
+            v_mat = rearrange(self.k(input[:, 1:, :]), 'b nf (h d) -> b h nf d', h = self.num_heads)
+            k_mat = rearrange(self.v(input[:, 1:, :]), 'b nf (h d) -> b h nf d', h = self.num_heads)
 
+
+            # the class token has to attend to the entire input (don't need multiple heads)
+            # So the q matrix will be the query of the first row (the class token) which will
+            # 'attend' to all of the key values
+            q_mat_cls_tkn = rearrange(self.q(input[:, 0:1, :]), 'b nf (h d) -> b h nf d', h = self.num_heads)
+            v_mat_cls_tkn = rearrange(self.v(input), 'b nf (h d) -> b h nf d', h = self.num_heads)
+            k_mat_cls_tkn = rearrange(self.k(input), 'b nf (h d) -> b h nf d', h = self.num_heads)
+            inter_cls_tkn = self.softmax(torch.matmul(q_mat_cls_tkn, torch.transpose(k_mat_cls_tkn, 2, 3)) / (math.sqrt(self.Dh) * self.num_heads))
+            inter_cls_tkn = torch.matmul(inter_cls_tkn, v_mat_cls_tkn)
+ 
+
+
+ 
             # First, we calculate temporal attention, multiplying the q vector being processed by every k vector at that 
             # frame in subsequent time steps
 
             # at this point, the q matrix contains all of the query vectors to be processed
             # but each row will be multiplied by a different set of the k vectors, because they are being compared to the other
             # keys at that timeframe
-            temporal = self.softmax(torch.matmul(q_mat[:, :, 0::self.n, :], torch.transpose(k_mat[:, :, 0::self.n, :], 2, 3)) / (math.sqrt(self.Dh) * self.num_heads))
-            temporal = torch.matmul(temporal, v_mat[:, :, 0::self.n, :])
+            temporal = self.softmax(torch.matmul(q_mat[:, :, 1::self.n, :], torch.transpose(k_mat[:, :, 1::self.n, :], 2, 3)) / (math.sqrt(self.Dh) * self.num_heads))
+            temporal = torch.matmul(temporal, v_mat[:, :, 1::self.n, :])
             temporal = torch.sum(temporal, 2, keepdim = True)
             
             # temporal calculation
-            for x in range(1, self.n):
+            for x in range(2, self.n):
                 # get all of the patches at that frame
                 inter = self.softmax(torch.matmul(q_mat[:, :, x::self.n, :], torch.transpose(k_mat[:, :, x::self.n, :], 2, 3)) / (math.sqrt(self.Dh) * self.num_heads))
                 inter = torch.matmul(inter, v_mat[:, :, x::self.n, :])
@@ -83,11 +96,11 @@ class dividedSpaceTimeAttention(nn.Module):
             for x in range(1, self.num_frames):
                 inter = self.softmax(torch.matmul(q_mat[:, :, x:x+self.n, :], torch.transpose(k_mat[:, :, x::self.n, :], 2, 3)) / (math.sqrt(self.Dh) * self.num_heads))
                 inter = torch.matmul(inter, v_mat[:, :, x::self.n, :])
-                print(inter.shape)
                 inter = torch.sum(inter, 2, keepdim = True)
                 temporal = torch.cat((temporal, inter), 2)
 
             temporal = temporal.repeat(1, 1, self.n, 1)
+            temporal = torch.cat((inter_cls_tkn, temporal), 2)
             output = self.multi_mad_final(rearrange(temporal, 'b h nf d -> b nf (h d)', h = self.num_heads))
             return output
             
@@ -112,8 +125,8 @@ class EncoderBlock(nn.Module):
 
         
     def forward(self, input):
-        whoa = self.norm(input)
-        uhOh = self.attention.forward(whoa)
+        #whoa = self.norm(input)
+        uhOh = self.attention.forward(input)
         uhHuh = self.norm(uhOh + input)
         toAdd = uhOh + input    
         output = self.mlp(uhHuh)
@@ -136,22 +149,19 @@ class timeSformer(nn.Module):
         self.patch_dim = self.channels * patch_res * patch_res
         self.n = int((height * width) / (patch_res ** 2))
 
-        # the patch embeddings for the vision transformer
-        # the 'height','width','channel', and 'batch' are gleaned from the shape of the tensor
-       # self.patchEmbed = nn.Sequential(
-        #    (rearrange(video, 'b f c (h p1) (w p2) -> b (f h w) (p1 p2 c)', p1 = p, p2 = p),
-         #   nn.Linear(self.patch_dim, dim)))
 
         self.patchEmbed = nn.Sequential(
             Rearrange('b f c (h p1) (w p2) -> b (f h w) (p1 p2 c)', p1 = patch_res, p2 = patch_res),
             nn.Linear(self.patch_dim, dim),)
         # the class token serves as a representation of the entire sequence
+        # should attend to the entire sequence (so, it actually doesn't need to be stored with 
+        # the other vectors? as long as it is weighted sum?)
         self.classtkn = nn.Parameter(torch.randn(batch_size, 1, dim))
         # this will be concated to the end of the input before positional embedding
         # should the class token be randomonly initialized? or the same across batches? See what happens during training
 
         # the positional embedding should be applied based on what 
-        self.pos_embed = nn.Parameter(torch.randn(batch_size, num_frames * (self.n) +1, dim))
+        self.pos_embed = nn.Parameter(torch.randn(batch_size, num_frames * (self.n) + 1, dim))
         self.encoderBlocks = nn.ModuleList([EncoderBlock(num_heads = 8, dim = dim, n = self.n, num_frames=num_frames) for i in range(8)])
 
         
@@ -163,7 +173,7 @@ class timeSformer(nn.Module):
 
     def forward(self, vid):
         input = self.patchEmbed(vid)
-        input = torch.cat((input, self.classtkn), dim = 1)
+        input = torch.cat((self.classtkn, input), dim = 1)
         input += self.pos_embed
         input = self.dropout(input)
         for encoder in self.encoderBlocks:
@@ -173,9 +183,4 @@ class timeSformer(nn.Module):
         return out
 
 
-video = torch.randn(1, 5, 3, 224, 224)
-p = 16
-n = 224 * 224 / (16 * 16)
-new = timeSformer(224, 224, 5, 16, 32, 5, 1)
-print(new(video))
 
