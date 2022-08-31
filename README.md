@@ -4,7 +4,7 @@ Decepticons in Alexandria - a repo for some transformers
 
 ViT example:
 ```
-# arguments (in order): 
+# arguments for vit (in order): 
 # height
 # width
 # patch size
@@ -23,7 +23,7 @@ print(vit_mlp_output)
 timeSformer example:
 ```
 
-# arguments (in order): 
+# arguments for timeSformer (in order): 
 # height
 # width
 # number of frames
