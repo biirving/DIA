@@ -10,6 +10,8 @@ pip install DecepticonsInAlexandria
 
 ViT example:
 ```
+from DIAtransformers import vit
+
 # arguments for vit (in order): 
 # height
 # width
@@ -28,6 +30,7 @@ print(vit_mlp_output)
 
 timeSformer example:
 ```
+from DIAtransformers import timeSformer
 
 # arguments for timeSformer (in order): 
 # height
