@@ -11,6 +11,5 @@ setup(
     url = 'https://github.com/Lysander-curiosum/DIA.git',
     package_dir = {"": "src"},
     packages = find_packages("src"), 
-    packages = ['DIA'], 
 )
 
