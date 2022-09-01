@@ -1,0 +1,10 @@
+README.md
+setup.py
+src/DecepticonsInAlexandria.egg-info/PKG-INFO
+src/DecepticonsInAlexandria.egg-info/SOURCES.txt
+src/DecepticonsInAlexandria.egg-info/dependency_links.txt
+src/DecepticonsInAlexandria.egg-info/top_level.txt
+src/transformers/__init__.py
+src/transformers/models/__init__.py
+src/transformers/models/timeSformer.py
+src/transformers/models/vit.py
