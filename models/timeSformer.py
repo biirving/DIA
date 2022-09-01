@@ -183,4 +183,7 @@ class timeSformer(nn.Module):
         return out
 
 
+input = torch.randn(3, 7, 3, 224, 224)
+tf = timeSformer(224, 224, 7, 16, 512, 10, 3)
+print(tf(input))
 

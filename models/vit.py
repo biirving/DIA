@@ -113,7 +113,6 @@ class vit(nn.Module):
     def forward(self, img):
         input = self.patchEmbed(img)
         input = torch.cat((input, self.classtkn), dim = 1)
-        print(input)
         input += self.pos_embed
         input = self.dropout(input)
         for encoder in self.encoderBlocks:
@@ -139,3 +138,9 @@ class vit(nn.Module):
             positional = torch.tensor([val] * self.dim)
             input[0][x] += positional
         return input
+
+
+model = vit(224, 224, 16, 512, 10, 1)
+example_input = torch.randn(1, 3, 224, 224)
+
+print(model(example_input))
