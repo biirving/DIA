@@ -2,6 +2,12 @@
 Decepticons in Alexandria - a repo for some transformers
 
 
+Install:
+```
+pip install DecepticonsInAlexandria
+```
+
+
 ViT example:
 ```
 # arguments for vit (in order): 
