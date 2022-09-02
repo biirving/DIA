@@ -1,5 +1,5 @@
 # DIA
-Decepticons in Alexandria - a repo for some transformers
+Decepticons in Alexandria - a repo for transformers and diffusion models, among other things
 
 
 Install:
