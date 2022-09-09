@@ -6,7 +6,7 @@ import numpy as np
 from einops import rearrange, repeat
 from einops.layers.torch import Rearrange
 import math
-from DIAtransformers import dividedSpaceTimeAttention
+from .utils import dividedSpaceTimeAttention
 
 class EncoderBlock(nn.Module):
     def __init__(self, num_heads, dim, n, num_frames):

@@ -1,2 +1,2 @@
-from .multiHeadAttention import classicAttention
+from .multiHeadAttention import multiHeadAttention
 from .dividedSpaceTimeAttention import dividedSpaceTimeAttention
