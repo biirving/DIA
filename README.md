@@ -50,7 +50,7 @@ tf_mlp_output = tf_model(video_input)
 print(tf_mlp_output)
 ```
 
-So far, the finished implementations include the Vision Transformer
+So far, the finished implementations include the Vision Transformer (Google)
 ```
 @misc{https://doi.org/10.48550/arxiv.2010.11929,
   doi = {10.48550/ARXIV.2010.11929},
@@ -65,7 +65,7 @@ So far, the finished implementations include the Vision Transformer
 
 ```
 
-And the TimeSformer models
+And the TimeSformer models (Meta)
 ```
 @misc{https://doi.org/10.48550/arxiv.2102.05095,
   doi = {10.48550/ARXIV.2102.05095},
