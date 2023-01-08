@@ -8,6 +8,21 @@ from einops.layers.torch import Rearrange
 import math
 from .utils import dividedSpaceTimeAttention
 
+"""
+EncoderBlock
+
+An implementation of the encoder block from the vanilla transformer (Vaswani et al., 2017)
+
+args
+    - num_heads
+        number of attention heads
+    - dim
+        dim of image embeddings
+    - n
+        number of patch embeddings
+    - num_frames
+        number of images being processed
+"""
 class EncoderBlock(nn.Module):
     def __init__(self, num_heads, dim, n, num_frames):
         super(EncoderBlock, self).__init__()
