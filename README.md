@@ -7,7 +7,10 @@ Install:
 ```
 pip install DecepticonsInAlexandria
 ```
-
+Ensure dependencies align
+```
+pip install -r requirements.txt
+```
 
 ViT example:
 ```
