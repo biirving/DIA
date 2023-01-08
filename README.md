@@ -1,5 +1,5 @@
 # DIA
-Decepticons in Alexandria - a repo for transformers. 
+Decepticons in Alexandria - a repo for transformers. This library contains implementations of some relevant models, designed for lightweight inference. Built to compile with Neuron, an Amazon Web Services compiler for running models on their specialized hardware (Tranium, P4, etc.)
 
 
 
