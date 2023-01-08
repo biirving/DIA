@@ -7,7 +7,7 @@ Install:
 ```
 pip install DecepticonsInAlexandria
 ```
-Ensure dependencies align
+Ensure dependencies align (to use the requirement.txt file, one would have to clone the repo. It might be easier to manually ensure that the library has libraries which are up to date.)
 ```
 pip install -r requirements.txt
 ```
