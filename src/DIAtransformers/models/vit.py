@@ -38,7 +38,22 @@ class EncoderBlock(nn.Module):
 
 
 
-# You should be able to feed an input of any batch size to the model
+"""
+Vision Transformer model
+args
+    - Height 
+        height of the image, the original paper used the 224 x 224 image size
+    - Width
+        width of the image, the original paper used the 224 x 224 image size
+    - patch_res
+        resolution of the patch embeddings created by the model, the original paper condenses the information into 16x16 pixel segments
+    - dim
+        dimension of the embedded images
+    - num_classes
+        the number of prediction classes
+    - batch size
+        number of inferences to be made at once
+"""
 class vit(nn.Module):
 
     def __init__(self, height, width, patch_res, dim, num_classes, batch_size):
