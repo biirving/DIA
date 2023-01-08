@@ -91,7 +91,7 @@ class vit(nn.Module):
     def adjustBatchSize(self, newBatch):
         # We can just expand the class and position tokens according to the batch size
         self.classtkn = torch.expand(self.classtkn, 1, self.dim)
-        self.posEmbed = torch.expand(self.pos_embed, self.n + 1, dim)
+        self.posEmbed = torch.expand(self.pos_embed, self.n + 1, self.dim)
 
 
     # alternating sin/cos embeddings from the first paper 
