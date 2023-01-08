@@ -10,6 +10,19 @@ import PIL
 import sys, os 
 from .utils import multiHeadAttention
 
+"""
+EncoderBlock
+An implementation of the encoder block from the vanilla transformer (Vaswani et al., 2017)
+args
+    - num_heads
+        number of attention heads
+    - dim
+        dim of image embeddings
+    - n
+        number of patch embeddings
+    - num_frames
+        number of images being processed
+"""
 class EncoderBlock(nn.Module):
     def __init__(self, num_heads, dim, n):
         super(EncoderBlock, self).__init__()
@@ -103,6 +116,9 @@ class vit(nn.Module):
         return out
         
     # input will always have batchsize included?
+    """
+    Intended to support dynamic shaping
+    """
     def adjustBatchSize(self, newBatch):
         # We can just expand the class and position tokens according to the batch size
         self.classtkn = torch.expand(self.classtkn, 1, self.dim)
