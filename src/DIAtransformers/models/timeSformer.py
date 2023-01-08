@@ -36,10 +36,28 @@ class EncoderBlock(nn.Module):
         return output
 
 
-# You should be able to feed an input of any batch size to the model
+"""
+TimeSformer model
+
+args
+    - Height 
+        height of the image, the original paper used the 224 x 224 image size
+    - Width
+        width of the image, the original paper used the 224 x 224 image size
+    - num_frames
+        number of frames of the video which are to be processed by the model, the original paper used 8
+    - patch_res
+        resolution of the patch embeddings created by the model, the original paper condenses the information into 16x16 pixel segments
+    - dim
+        dimension of the embedded images
+    - num_classes
+        the number of prediction classes
+    - batch size
+        number of inferences to be made at once
+"""
 class timeSformer(nn.Module):
 
-    def __init__(self, height, width, num_frames, patch_res, dim, num_classes, batch_size):
+    def __init__(self, height = 224, width = 224, num_frames, patch_res, dim, num_classes, batch_size):
         super(timeSformer, self).__init__()
         self.checkPass = True
         self.height = height
